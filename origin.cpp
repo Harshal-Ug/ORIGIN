@@ -5,6 +5,7 @@
 #include <string>
 #include <openssl/sha.h>
 #include <vector>
+#include <map>
 #include <zlib.h>
 
 
@@ -21,6 +22,7 @@ void repoInit() {
     fs::create_directory(".origin/objects");
     fs::create_directory(".origin/refs");
     fs::create_directory(".origin/logs");
+    fs::create_directories(".origin/indexe");
 
     // file created to contain references.
     ofstream headFile(".origin/head");
@@ -32,8 +34,8 @@ void repoInit() {
     refFile.close();
 }
 
-string reading() {
-    ifstream ipFile("test.cpp", ios::binary);
+string reading(const string &filename) {
+    ifstream ipFile(filename, ios::binary);
     if (!ipFile.is_open()) {
         cerr << "Error opening the file";
         return "";
@@ -59,7 +61,7 @@ vector<unsigned char> compressData(const string &data) {
 }
 
 
-void hashing(const string &fileContent) {
+string hashing(const string &fileContent) {
 
     
 
@@ -89,13 +91,26 @@ void hashing(const string &fileContent) {
     ofstream blob(folder + "/" + filename, ios::binary);
     blob.write(reinterpret_cast<const char*>(compressed.data()), compressed.size());
     blob.close();
-
+    return hexHash;
+    
+}
+//This function create a file "Index" ans saves the info eg(test.cpp:c74e0cbcbdeefff97c8c3412fb2ca9e9b2507ae8).
+void indexAdd(const string &filename , const string &hash){
+    ofstream inFile(".origin/index" , ios:: app);
+    if(!inFile.is_open()){
+        cerr<<"Index file not opening";
+    }
+    inFile<<filename<<":"<<hash<<endl;
 }
 
+
 int main() {
+    string hash;
     repoInit();
-    string content = reading();
+    string filename = "test.cpp";
+    string content = reading(filename);
     if (!content.empty()) {
-        hashing(content);
+        hash = hashing(content);
     }
+    indexAdd(filename,hash);
 }
